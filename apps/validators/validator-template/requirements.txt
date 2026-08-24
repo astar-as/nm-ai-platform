@@ -1,0 +1,3 @@
+# Add only pinned, hashed task-specific dependencies here. The image build uses
+# --require-hashes and fails closed on unpinned packages. Shared harness
+# dependencies are installed from ../shared/requirements.lock.

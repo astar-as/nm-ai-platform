@@ -1,0 +1,7 @@
+packages:
+  - .
+overrides:
+  "@babel/core": ">=7.29.6"
+ignoredBuiltDependencies:
+  - sharp
+  - unrs-resolver
