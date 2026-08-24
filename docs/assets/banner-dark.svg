@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="260" viewBox="0 0 1280 260" role="img" aria-label="AI Championship Platform — an open-source competition shell">
+  <defs>
+    <linearGradient id="fade" gradientUnits="userSpaceOnUse" x1="640" x2="1000">
+      <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="0.55" stop-color="#fff" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="1"/>
+    </linearGradient>
+    <mask id="m"><rect x="0" y="0" width="1280" height="260" fill="url(#fade)"/></mask>
+  </defs>
+
+  <rect width="1280" height="260" fill="#0B1524"/>
+
+  <g mask="url(#m)" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12">
+    <text x="676" y="26" fill="#5A6B80" letter-spacing="1.4">RANK</text>
+    <text x="736" y="26" fill="#5A6B80" letter-spacing="1.4">TEAM</text>
+    <text x="1010" y="26" fill="#5A6B80" letter-spacing="1.4">SCORE</text>
+
+    <rect x="668" y="38" width="600" height="1" fill="#1E3050"/>
+
+    <g>
+      <text x="676" y="62" fill="#F2B441">01</text>
+      <rect x="736" y="52" width="188" height="11" rx="2" fill="#2E4568"/>
+      <rect x="1010" y="52" width="258" height="11" rx="2" fill="#F2B441"/>
+    </g>
+    <g>
+      <text x="676" y="94" fill="#7A8BA3">02</text>
+      <rect x="736" y="84" width="150" height="11" rx="2" fill="#243A5C"/>
+      <rect x="1010" y="84" width="222" height="11" rx="2" fill="#4FC3E8"/>
+    </g>
+    <g>
+      <text x="676" y="126" fill="#7A8BA3">03</text>
+      <rect x="736" y="116" width="204" height="11" rx="2" fill="#243A5C"/>
+      <rect x="1010" y="116" width="196" height="11" rx="2" fill="#2E7D5B"/>
+    </g>
+    <g>
+      <text x="676" y="158" fill="#5A6B80">04</text>
+      <rect x="736" y="148" width="132" height="11" rx="2" fill="#1E3050"/>
+      <rect x="1010" y="148" width="160" height="11" rx="2" fill="#2E4568"/>
+    </g>
+    <g>
+      <text x="676" y="190" fill="#5A6B80">05</text>
+      <rect x="736" y="180" width="176" height="11" rx="2" fill="#1E3050"/>
+      <rect x="1010" y="180" width="128" height="11" rx="2" fill="#2E4568"/>
+    </g>
+    <g>
+      <text x="676" y="222" fill="#5A6B80">06</text>
+      <rect x="736" y="212" width="144" height="11" rx="2" fill="#1E3050"/>
+      <rect x="1010" y="212" width="96" height="11" rx="2" fill="#2E4568"/>
+    </g>
+    <g>
+      <text x="676" y="254" fill="#5A6B80">07</text>
+      <rect x="736" y="244" width="164" height="11" rx="2" fill="#1E3050"/>
+      <rect x="1010" y="244" width="74" height="11" rx="2" fill="#2E4568"/>
+    </g>
+  </g>
+
+  <rect x="64" y="92" width="40" height="4" fill="#F2B441"/>
+  <text x="64" y="78" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="44" font-weight="700" fill="#E6EDF7">AI Championship Platform</text>
+  <text x="64" y="132" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="19" fill="#7A8BA3">An open-source shell for hosting AI championships.</text>
+  <text x="64" y="158" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="19" fill="#7A8BA3">Identity, submissions, scoring infrastructure, and leaderboards.</text>
+  <text x="64" y="200" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" letter-spacing="1.5" fill="#5A6B80">FASTAPI  ·  NEXT.JS  ·  POSTGRES  ·  MCP</text>
+</svg>

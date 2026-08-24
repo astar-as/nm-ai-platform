@@ -1,0 +1,88 @@
+services:
+  postgres:
+    image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
+    environment:
+      POSTGRES_DB: championship
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d championship"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  migrate:
+    image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - ./apps/backend/migrations:/migrations:ro
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        for migration in /migrations/*.sql; do
+          echo "Applying $${migration}"
+          psql -v ON_ERROR_STOP=1 -h postgres -U postgres -d championship -f "$${migration}"
+        done
+
+  backend:
+    build: ./apps/backend
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "8003:8080"
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/championship
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      ALLOW_MOCK_AUTH: ${ALLOW_MOCK_AUTH:-false}
+      ALLOW_INSECURE_HTTP: ${ALLOW_INSECURE_HTTP:-false}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:8003/auth/callback}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3003}
+      BACKEND_URL: ${BACKEND_URL:-http://localhost:8003}
+      LOOPS_API_KEY: ${LOOPS_API_KEY:-}
+      LOOPS_TRANSACTIONAL_ID: ${LOOPS_TRANSACTIONAL_ID:-}
+      LOOPS_INVITE_TRANSACTIONAL_ID: ${LOOPS_INVITE_TRANSACTIONAL_ID:-}
+      LOOPS_MEMBER_JOINED_TRANSACTIONAL_ID: ${LOOPS_MEMBER_JOINED_TRANSACTIONAL_ID:-}
+      SUBMISSION_SECRET_KEY: ${SUBMISSION_SECRET_KEY:-}
+      CODE_SUBMISSIONS_BUCKET: ${CODE_SUBMISSIONS_BUCKET:-code-submissions}
+      PARTICIPANT_DATA_BUCKET: ${PARTICIPANT_DATA_BUCKET:-participant-data}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    build:
+      context: ./apps/frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8003}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3003}
+        NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-AI Championship}
+        NEXT_PUBLIC_COMPETITION_SLUG: ${NEXT_PUBLIC_COMPETITION_SLUG:-demo-championship}
+        NEXT_PUBLIC_SUPPORT_EMAIL: ${NEXT_PUBLIC_SUPPORT_EMAIL:-support@example.com}
+        NEXT_PUBLIC_SLACK_INVITE_URL: ${NEXT_PUBLIC_SLACK_INVITE_URL:-}
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3003:3000"
+    environment:
+      INTERNAL_API_URL: http://backend:8080
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8003}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3003}
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-AI Championship}
+      NEXT_PUBLIC_COMPETITION_SLUG: ${NEXT_PUBLIC_COMPETITION_SLUG:-demo-championship}
+      NEXT_PUBLIC_SUPPORT_EMAIL: ${NEXT_PUBLIC_SUPPORT_EMAIL:-support@example.com}
+      NEXT_PUBLIC_SLACK_INVITE_URL: ${NEXT_PUBLIC_SLACK_INVITE_URL:-}
+
+volumes:
+  postgres-data:
