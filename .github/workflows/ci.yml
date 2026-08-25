@@ -111,6 +111,7 @@ jobs:
         env:
           POSTGRES_PASSWORD: ci-only-postgres-password
           POSTGRES_PORT: "55432"
+          JWT_SECRET: ci-only-jwt-secret-at-least-32-bytes
         run: |
           docker compose up -d postgres
           docker compose run --rm migrate
