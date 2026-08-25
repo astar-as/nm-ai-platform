@@ -92,7 +92,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchUser, fetchTeam])
 
   const loginWithProvider = (provider: "google") => {
-    window.location.href = `${API_BASE}/auth/login?provider=${provider}`
+    const loginUrl = new URL("/auth/login", API_BASE)
+    loginUrl.searchParams.set("provider", provider)
+    window.location.assign(loginUrl)
   }
 
   const handleAuthCallback = useCallback(async (): Promise<User> => {

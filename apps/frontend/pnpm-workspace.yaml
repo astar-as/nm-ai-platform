@@ -2,6 +2,13 @@ packages:
   - .
 overrides:
   "@babel/core": ">=7.29.6"
+  "brace-expansion@1": "1.1.18"
+  "brace-expansion@2": "2.1.4"
+  "flatted": "3.4.2"
+  "minimatch@3": "3.1.5"
+  "minimatch@9": "9.0.9"
+  "picomatch@2": "2.3.2"
+  "picomatch@4": "4.0.4"
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
