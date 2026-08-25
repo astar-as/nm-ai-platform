@@ -43,7 +43,10 @@ alias i := install
 
 [group("meta")]
 @dev: ensure-env
+    python3 scripts/dev_banner.py "${DEV_BANNER:-${NEXT_PUBLIC_APP_NAME:-AI Championship}}"
     (cd apps/backend && .venv/bin/uvicorn app.main:app --reload --host 0.0.0.0 --port 8003) & \
+    backend_pid=$!; \
+    trap 'kill "$backend_pid" 2>/dev/null || true' EXIT INT TERM; \
     cd apps/frontend && pnpm dev --port 3003
 
 # ---------------------------------------------------------------------------- #

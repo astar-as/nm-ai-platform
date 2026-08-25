@@ -102,6 +102,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Validate local environment template
+        run: |
+          awk -F= '
+            /^[A-Za-z_][A-Za-z0-9_]*=/ {
+              value = substr($0, index($0, "=") + 1)
+              if (value ~ /[[:space:]]/ && value !~ /^".*"$/) {
+                print "Unquoted whitespace in .env.example for " $1
+                exit 1
+              }
+            }
+          ' .env.example
       - name: Validate Compose configuration
         env:
           POSTGRES_PASSWORD: ci-only-postgres-password
