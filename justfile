@@ -15,7 +15,7 @@ psql := "psql"
 # ---------------------------------------------------------------------------- #
 
 db_host := env_var_or_default("DB_HOST", "localhost")
-db_port := env_var_or_default("DB_PORT", env_var_or_default("POSTGRES_PORT", "5433"))
+db_port := env_var_or_default("DB_PORT", env_var_or_default("POSTGRES_PORT", "55432"))
 db_name := env_var_or_default("DB_NAME", "championship")
 db_user := env_var_or_default("DB_USER", "postgres")
 db_pass := env_var_or_default("DB_PASS", env_var_or_default("POSTGRES_PASSWORD", "postgres"))
