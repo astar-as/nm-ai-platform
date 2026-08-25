@@ -22,6 +22,7 @@ const contentSecurityPolicy = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  agentRules: false,
   output: "standalone",
   serverExternalPackages: ["@resvg/resvg-js", "@react-pdf/renderer"],
   async headers() {
