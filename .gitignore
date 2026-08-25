@@ -1,0 +1,29 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+node_modules/
+.next/
+.turbo/
+.pnpm-store/
+# Dataset files (large, downloaded locally)
+data/
+
+# Model weights (large binaries)
+*.pt
+
+
+# Claude Code
+.claude/settings.local.json
+.claude/worktrees/
+.claude/scheduled_tasks.lock

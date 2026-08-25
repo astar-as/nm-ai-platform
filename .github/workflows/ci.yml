@@ -1,0 +1,179 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: championship
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            apps/backend/requirements-dev.txt
+            apps/backend/requirements-dev.lock
+            apps/backend/requirements.lock
+      - name: Install dependencies
+        run: pip install --require-hashes -r apps/backend/requirements-dev.lock
+      - name: Apply migrations to fresh database
+        env:
+          PGPASSWORD: postgres
+        run: |
+          for f in $(ls apps/backend/migrations/*.sql | sort); do
+            echo "Running $f"
+            psql -v ON_ERROR_STOP=1 -q -h localhost -U postgres -d championship -f "$f"
+          done
+      - name: Verify database integrity guards
+        env:
+          PGPASSWORD: postgres
+        run: psql -v ON_ERROR_STOP=1 -q -h localhost -U postgres -d championship -f apps/backend/tests/schema_integrity.sql
+      - name: Run tests
+        working-directory: apps/backend
+        run: python -m pytest tests/ -v
+      - name: Lint backend
+        run: ruff check --select F,I apps/backend/app apps/backend/tests
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: 10.7.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: apps/frontend/pnpm-lock.yaml
+      - name: Install dependencies
+        working-directory: apps/frontend
+        run: pnpm install --frozen-lockfile
+      - name: Lint
+        working-directory: apps/frontend
+        run: pnpm lint
+      - name: Build
+        working-directory: apps/frontend
+        run: pnpm build
+
+  validators:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Install harness test dependencies
+        run: |
+          python -m pip install ruff==0.16.2 pytest==9.1.1 pytest-asyncio==1.4.0
+          python -m pip install --require-hashes -r apps/validators/shared/requirements.lock
+          python -m pip install --require-hashes -r apps/mcp-challenge/requirements.lock
+          python -m pip install --require-hashes -r apps/mcp-submit/requirements.lock
+      - name: Test validator and documentation boundaries
+        run: |
+          PYTHONPATH=apps/validators python -m pytest -q apps/validators/tests
+          python -m pytest -q apps/mcp-challenge/tests
+      - name: Lint service Python
+        run: ruff check --select F,I apps/validators apps/mcp-challenge apps/mcp-submit
+      - name: Compile check
+        run: python -m compileall -q apps/validators apps/mcp-challenge apps/mcp-submit
+
+  containers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Validate local environment template
+        run: |
+          awk -F= '
+            /^[A-Za-z_][A-Za-z0-9_]*=/ {
+              value = substr($0, index($0, "=") + 1)
+              if (value ~ /[[:space:]]/ && value !~ /^".*"$/) {
+                print "Unquoted whitespace in .env.example for " $1
+                exit 1
+              }
+            }
+          ' .env.example
+      - name: Validate Compose configuration
+        env:
+          POSTGRES_PASSWORD: ci-only-postgres-password
+          JWT_SECRET: ci-only-jwt-secret-at-least-32-bytes
+        run: docker compose config --quiet
+      - name: Verify repeatable database bootstrap
+        env:
+          POSTGRES_PASSWORD: ci-only-postgres-password
+          POSTGRES_PORT: "55432"
+          JWT_SECRET: ci-only-jwt-secret-at-least-32-bytes
+        run: |
+          bash scripts/migrate.sh
+          bash scripts/migrate.sh
+          docker compose down --volumes
+      - name: Build application images
+        run: |
+          docker build -t championship-backend apps/backend
+          docker build -t championship-frontend apps/frontend
+          docker build -t championship-mcp-challenge apps/mcp-challenge
+          docker build -t championship-mcp-submit apps/mcp-submit
+          docker build -t championship-validator -f apps/validators/Dockerfile apps/validators
+      - name: Verify containers run as non-root
+        run: |
+          for image in championship-backend championship-frontend championship-mcp-challenge championship-mcp-submit championship-validator; do
+            test "$(docker run --rm --entrypoint id "$image" -u)" != "0"
+          done
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Run gitleaks
+        run: |
+          curl -fsSLo gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+          ./gitleaks detect --source . --redact
+
+  dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Audit Python dependencies
+        run: |
+          python -m pip install pip-audit==2.10.1
+          pip-audit -r apps/backend/requirements.lock
+          pip-audit -r apps/mcp-challenge/requirements.lock
+          pip-audit -r apps/mcp-submit/requirements.lock
+          pip-audit -r apps/validators/shared/requirements.lock
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: 10.7.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - name: Audit frontend dependencies
+        working-directory: apps/frontend
+        run: pnpm audit --audit-level moderate

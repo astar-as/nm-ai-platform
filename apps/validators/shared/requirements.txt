@@ -1,0 +1,11 @@
+asyncpg==0.30.0
+httpx==0.28.1
+pydantic==2.10.4
+pydantic-settings==2.7.1
+structlog==24.4.0
+prometheus-client==0.21.0
+aioboto3==13.3.0
+google-cloud-storage>=2.0.0
+cryptography>=44.0.1
+uvicorn==0.34.0
+fastapi==0.141.1

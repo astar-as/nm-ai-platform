@@ -1,0 +1,81 @@
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /apps/backend
+    schedule:
+      interval: weekly
+    groups:
+      backend-python:
+        patterns:
+          - "*"
+
+  - package-ecosystem: pip
+    directory: /apps/mcp-challenge
+    schedule:
+      interval: weekly
+    groups:
+      challenge-mcp-python:
+        patterns:
+          - "*"
+
+  - package-ecosystem: pip
+    directory: /apps/mcp-submit
+    schedule:
+      interval: weekly
+    groups:
+      submit-mcp-python:
+        patterns:
+          - "*"
+
+  - package-ecosystem: npm
+    directory: /apps/frontend
+    schedule:
+      interval: weekly
+    groups:
+      frontend-production:
+        dependency-type: production
+        patterns:
+          - "*"
+      frontend-development:
+        dependency-type: development
+        patterns:
+          - "*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directory: /apps/backend
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directory: /apps/frontend
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directory: /apps/mcp-challenge
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directory: /apps/mcp-submit
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directory: /apps/validators
+    schedule:
+      interval: weekly
