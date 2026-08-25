@@ -28,3 +28,8 @@ leases and participant-visible error handling require tests.
 Never commit credentials, participant data, private evaluation data or real
 competition submissions. Report security issues through the private process in
 [SECURITY.md](SECURITY.md).
+
+## Licensing
+
+By submitting a contribution, you agree that it may be distributed under the
+[MIT License](LICENSE).
