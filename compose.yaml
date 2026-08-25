@@ -10,6 +10,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
@@ -25,10 +27,14 @@ services:
     entrypoint: ["/bin/sh", "-ec"]
     command:
       - |
-        for migration in /migrations/*.sql; do
-          echo "Applying $${migration}"
-          psql -v ON_ERROR_STOP=1 -h postgres -U postgres -d championship -f "$${migration}"
-        done
+        if [ "$$(psql -h postgres -U postgres -d championship -Atqc "SELECT to_regclass('public.competitions') IS NOT NULL")" = "t" ]; then
+          echo "Database schema is already initialized."
+        else
+          for migration in /migrations/*.sql; do
+            echo "Applying $${migration}"
+            psql -v ON_ERROR_STOP=1 --single-transaction -h postgres -U postgres -d championship -f "$${migration}"
+          done
+        fi
 
   backend:
     build: ./apps/backend

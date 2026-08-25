@@ -14,11 +14,13 @@ psql := "psql"
 #                                  CONSTANTS                                   #
 # ---------------------------------------------------------------------------- #
 
-db_host := env_var_or_default("DB_HOST", "postgres")
+db_host := env_var_or_default("DB_HOST", "localhost")
+db_port := env_var_or_default("DB_PORT", env_var_or_default("POSTGRES_PORT", "5433"))
 db_name := env_var_or_default("DB_NAME", "championship")
 db_user := env_var_or_default("DB_USER", "postgres")
-db_pass := env_var_or_default("DB_PASS", "postgres")
-db_url := "postgresql://" + db_user + ":" + db_pass + "@" + db_host + ":5432/" + db_name
+db_pass := env_var_or_default("DB_PASS", env_var_or_default("POSTGRES_PASSWORD", "postgres"))
+db_url := "postgresql://" + db_user + ":" + db_pass + "@" + db_host + ":" + db_port + "/" + db_name
+export DATABASE_URL := env_var_or_default("DATABASE_URL", db_url)
 
 # ---------------------------------------------------------------------------- #
 #                                   COMMANDS                                   #
@@ -31,12 +33,16 @@ default:
 #                                    META                                      #
 # ---------------------------------------------------------------------------- #
 
+[private]
+@ensure-env:
+    if [ ! -f .env ]; then cp .env.example .env; echo "Created .env from .env.example"; fi
+
 [group("meta")]
-install: backend-install frontend-install validators-install mcp-challenge-install mcp-submit-install
+install: ensure-env backend-install frontend-install validators-install mcp-challenge-install mcp-submit-install
 alias i := install
 
 [group("meta")]
-@dev:
+@dev: ensure-env
     (cd apps/backend && .venv/bin/uvicorn app.main:app --reload --host 0.0.0.0 --port 8003) & \
     cd apps/frontend && pnpm dev --port 3003
 
@@ -151,13 +157,10 @@ export PGOPTIONS := "--client-min-messages=warning"
 
 [group("database")]
 [script("bash")]
-migrate:
+migrate: ensure-env
     set -euo pipefail
-    for f in $(ls apps/backend/migrations/*.sql | sort); do
-        echo "Running $f..."
-        psql -q "{{db_url}}" -f "$f"
-    done
-    echo "Migrations complete."
+    docker compose up -d postgres
+    docker compose run --rm migrate
 alias m := migrate
 
 [group("database")]
@@ -165,12 +168,12 @@ alias m := migrate
 
 [group("database")]
 @db-reset:
-    psql -q "postgresql://{{db_user}}:{{db_pass}}@{{db_host}}:5432/postgres" -c "DROP DATABASE IF EXISTS {{db_name}}"
-    psql -q "postgresql://{{db_user}}:{{db_pass}}@{{db_host}}:5432/postgres" -c "CREATE DATABASE {{db_name}}"
+    docker compose down --volumes
 
 [group("database")]
-@db-shell:
-    psql "{{db_url}}"
+@db-shell: ensure-env
+    docker compose up -d postgres
+    docker compose exec postgres psql -U postgres -d championship
 
 # ---------------------------------------------------------------------------- #
 #                                    TESTS                                     #

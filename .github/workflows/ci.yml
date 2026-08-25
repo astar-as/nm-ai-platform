@@ -107,6 +107,15 @@ jobs:
           POSTGRES_PASSWORD: ci-only-postgres-password
           JWT_SECRET: ci-only-jwt-secret-at-least-32-bytes
         run: docker compose config --quiet
+      - name: Verify repeatable database bootstrap
+        env:
+          POSTGRES_PASSWORD: ci-only-postgres-password
+          POSTGRES_PORT: "55432"
+        run: |
+          docker compose up -d postgres
+          docker compose run --rm migrate
+          docker compose run --rm migrate
+          docker compose down --volumes
       - name: Build application images
         run: |
           docker build -t championship-backend apps/backend

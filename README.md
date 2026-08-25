@@ -62,7 +62,10 @@ The frontend is served at `http://localhost:3003` and the backend at
 competition and its task metadata before participant testing; do not add real
 task data to this repository.
 
-For a non-container workflow:
+To run the application processes on the host while keeping PostgreSQL in
+Compose, these three commands are sufficient. `just install` creates `.env`
+from `.env.example` when it is missing, `just migrate` starts PostgreSQL and
+applies the schema, and `just dev` connects the backend to that database.
 
 ```bash
 just install
