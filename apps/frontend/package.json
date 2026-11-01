@@ -45,7 +45,7 @@
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.2",
-    "satori": "^0.25.0",
+    "satori": "^0.33.5",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "unified": "^11.0.5",
